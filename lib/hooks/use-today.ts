@@ -26,6 +26,7 @@ export function useToday(): UseTodayReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [streak, setStreak] = useState(0);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const supabase = createClient();
   const today = getLocalToday();
@@ -39,6 +40,7 @@ export function useToday(): UseTodayReturn {
         setIsLoading(false);
         return;
       }
+      setUserId(user.id);
 
       // Fetch all data in parallel
       const [
@@ -216,7 +218,7 @@ export function useToday(): UseTodayReturn {
   }, [fetchData]);
 
   const toggleDeficit = async () => {
-    if (!data) return;
+    if (!data || !userId) return;
 
     const newValue = !data.dailyLog?.deficit;
 
@@ -245,6 +247,7 @@ export function useToday(): UseTodayReturn {
         .from('daily_logs')
         .upsert(
           {
+            user_id: userId,
             date: today,
             deficit: newValue,
             protein: data.dailyLog?.protein ?? false,
@@ -268,7 +271,7 @@ export function useToday(): UseTodayReturn {
   };
 
   const toggleProtein = async () => {
-    if (!data) return;
+    if (!data || !userId) return;
 
     const newValue = !data.dailyLog?.protein;
 
@@ -297,6 +300,7 @@ export function useToday(): UseTodayReturn {
         .from('daily_logs')
         .upsert(
           {
+            user_id: userId,
             date: today,
             deficit: data.dailyLog?.deficit ?? false,
             protein: newValue,
@@ -320,7 +324,7 @@ export function useToday(): UseTodayReturn {
   };
 
   const addWorkout = async () => {
-    if (!data) return;
+    if (!data || !userId) return;
 
     // Optimistic update
     setData((prev) => {
@@ -334,7 +338,7 @@ export function useToday(): UseTodayReturn {
     try {
       const { error } = await supabase
         .from('workout_logs')
-        .insert({ logged_at: new Date().toISOString() });
+        .insert({ user_id: userId, logged_at: new Date().toISOString() });
 
       if (error) throw error;
     } catch {
@@ -350,7 +354,7 @@ export function useToday(): UseTodayReturn {
   };
 
   const removeWorkout = async () => {
-    if (!data || data.weeklyWorkoutCount <= 0) return;
+    if (!data || !userId || data.weeklyWorkoutCount <= 0) return;
 
     // Optimistic update
     setData((prev) => {
@@ -392,7 +396,7 @@ export function useToday(): UseTodayReturn {
   };
 
   const updateWeight = async (weight: number) => {
-    if (!data) return;
+    if (!data || !userId) return;
 
     const oldWeight = data.todayWeight;
 
@@ -429,7 +433,7 @@ export function useToday(): UseTodayReturn {
     try {
       const { error } = await supabase
         .from('weight_logs')
-        .upsert({ date: today, weight }, { onConflict: 'user_id,date' });
+        .upsert({ user_id: userId, date: today, weight }, { onConflict: 'user_id,date' });
 
       if (error) throw error;
     } catch {
@@ -445,7 +449,7 @@ export function useToday(): UseTodayReturn {
   };
 
   const completeTask = async (taskId: string) => {
-    if (!data) return;
+    if (!data || !userId) return;
 
     const currentCount = data.taskCompletions.get(taskId) || 0;
 
@@ -460,7 +464,7 @@ export function useToday(): UseTodayReturn {
     try {
       const { error } = await supabase
         .from('task_completions')
-        .insert({ task_id: taskId, week_start: weekStart });
+        .insert({ user_id: userId, task_id: taskId, week_start: weekStart });
 
       if (error) throw error;
     } catch {
@@ -475,7 +479,7 @@ export function useToday(): UseTodayReturn {
   };
 
   const uncompleteTask = async (taskId: string) => {
-    if (!data) return;
+    if (!data || !userId) return;
 
     const currentCount = data.taskCompletions.get(taskId) || 0;
     if (currentCount <= 0) return;
