@@ -3,23 +3,24 @@
 @tailwind utilities;
 
 :root {
-  --bg: #050505;
-  --surface: #0F0F0F;
-  --surface-hover: #1A1A1A;
-  --border: #262626;
-  --text: #FAFAFA;
+  /* V2: Pure black experience */
+  --bg: #000000;
+  --text: #FFFFFF;
   --text-muted: #737373;
-  --text-subtle: #525252;
 
-  --win: #22C55E;
-  --win-bg: rgba(34, 197, 94, 0.1);
-  --lose: #525252;
-  --not-yet: #404040;
+  /* Trend colors */
+  --trend-down: #4ADE80;
+  --trend-up: #F87171;
+  --trend-flat: #737373;
 
-  --accent: #F97316;
-  --accent-hover: #EA580C;
+  /* Dot states */
+  --dot-empty: #333333;
+  --dot-filled: #FFFFFF;
 
-  --danger: #EF4444;
+  /* Ambient glows (barely perceptible) */
+  --glow-winning: rgba(74, 222, 128, 0.03);
+  --glow-losing: rgba(248, 113, 113, 0.03);
+  --glow-complete: rgba(251, 191, 36, 0.02);
 }
 
 * {
@@ -36,163 +37,59 @@ body {
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
 }
 
 body {
   min-height: 100vh;
   min-height: 100dvh;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
 }
 
-/* Safe area padding for iOS */
-.safe-top {
-  padding-top: max(20px, env(safe-area-inset-top));
+/* Safe area for iOS */
+.safe-area {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
-.safe-bottom {
-  padding-bottom: max(20px, env(safe-area-inset-bottom));
-}
-
-/* Touch feedback */
+/* Touch optimization */
 .tap-target {
-  min-height: 48px;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
 
-/* Card base */
-.card {
-  background-color: var(--surface);
-  border-radius: 16px;
-  padding: 16px;
-  transition: transform 150ms ease-out, background-color 150ms ease-out;
+/* The massive weight number */
+.weight-number {
+  font-size: clamp(120px, 40vw, 200px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-feature-settings: 'tnum' on, 'lnum' on;
+  font-variant-numeric: tabular-nums;
 }
 
-.card:active {
-  transform: scale(0.97);
-  background-color: var(--surface-hover);
-}
-
-/* Input styles */
-input[type="number"],
-input[type="email"],
-input[type="text"] {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 16px;
-  color: var(--text);
-  font-size: 16px;
-  width: 100%;
-  outline: none;
-  transition: border-color 150ms ease-out;
-}
-
-input:focus {
-  border-color: var(--accent);
-}
-
-/* Button base */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 24px;
-  border-radius: 12px;
-  font-weight: 500;
-  font-size: 16px;
-  transition: all 150ms ease-out;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  border: none;
-  cursor: pointer;
-}
-
-.btn-primary {
-  background-color: var(--accent);
-  color: white;
-}
-
-.btn-primary:hover,
-.btn-primary:active {
-  background-color: var(--accent-hover);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Toast notification */
-.toast {
+/* Ambient background glow */
+.ambient-glow {
   position: fixed;
-  bottom: calc(20px + env(safe-area-inset-bottom));
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 20px;
-  font-size: 14px;
-  z-index: 1000;
-  animation: toast-in 200ms ease-out;
+  inset: 0;
+  pointer-events: none;
+  transition: background 1000ms linear;
 }
 
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
+.ambient-glow.winning {
+  background: radial-gradient(circle at 50% 40%, var(--glow-winning) 0%, transparent 70%);
 }
 
-/* Sparkline */
-.sparkline {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 24px;
+.ambient-glow.losing {
+  background: radial-gradient(circle at 50% 40%, var(--glow-losing) 0%, transparent 70%);
 }
 
-.sparkline-bar {
-  width: 8px;
-  background-color: var(--text-muted);
-  border-radius: 2px;
-  transition: height 200ms ease-out;
-}
-
-/* Progress bar */
-.progress-bar {
-  height: 8px;
-  background-color: var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background-color: var(--win);
-  border-radius: 4px;
-  transition: width 300ms ease-out;
-}
-
-.progress-fill.behind {
-  background-color: var(--accent);
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+.ambient-glow.complete {
+  background: radial-gradient(circle at 50% 40%, var(--glow-complete) 0%, transparent 70%);
 }
 
 /* Numeric input - hide spinners */
@@ -204,4 +101,16 @@ input[type="number"]::-webkit-outer-spin-button {
 
 input[type="number"] {
   -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
